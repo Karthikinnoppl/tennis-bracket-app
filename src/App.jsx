@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
-function TennisBracket() {
+const TennisBracket = () => {
   const [players, setPlayers] = useState([]);
   const [name, setName] = useState('');
   const [matches, setMatches] = useState([]);
@@ -24,7 +24,7 @@ function TennisBracket() {
 
       const matchesSnap = await getDocs(collection(db, 'matches'));
       const loadedMatches = matchesSnap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-      loadedMatches.sort((a, b) => new Date(a.date) - new Date(b.date)); // sort by date ascending
+      loadedMatches.sort((a, b) => new Date(a.date) - new Date(b.date)); // sort matches oldest to newest
       setMatches(loadedMatches);
     };
     fetchData();
@@ -136,18 +136,17 @@ function TennisBracket() {
     return matches.filter(m => [...m.team1, ...m.team2].includes(playerName)).length;
   };
 
+  if (players.length === 0 || matches.length === 0) {
+    return <div className="text-center mt-20">Loading...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-green-200 to-blue-200 p-6">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold mb-4 text-center">🎾 Tennis Doubles Scheduler</h1>
 
         <div className="flex gap-2 justify-center mb-6">
-          <input
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Enter player name"
-            className="px-3 py-2 border rounded w-64"
-          />
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Enter player name" className="px-3 py-2 border rounded w-64" />
           <button onClick={addPlayer} className="bg-blue-600 text-white px-4 py-2 rounded">Add Player</button>
         </div>
 
@@ -193,12 +192,7 @@ function TennisBracket() {
         <div className="mb-8 bg-white p-4 rounded shadow">
           <h2 className="text-lg font-bold mb-2">📅 Manually Schedule a Match</h2>
           <div className="mb-2">Team 1: {customMatch.team1.join(' & ')} | Team 2: {customMatch.team2.join(' & ')}</div>
-          <input
-            type="date"
-            value={customMatch.date}
-            onChange={(e) => setCustomMatch(prev => ({ ...prev, date: e.target.value }))}
-            className="px-2 py-1 border rounded mr-2"
-          />
+          <input type="date" value={customMatch.date} onChange={(e) => setCustomMatch(prev => ({ ...prev, date: e.target.value }))} className="px-2 py-1 border rounded mr-2" />
           <button onClick={addManualMatch} className="bg-teal-600 text-white px-3 py-1 rounded">Add Match</button>
         </div>
 
@@ -221,23 +215,9 @@ function TennisBracket() {
                   {[0, 1, 2].map((setIdx) => (
                     <div key={setIdx} className="flex items-center gap-2 mb-1">
                       <span>Set {setIdx + 1}:</span>
-                      <button
-                        onClick={() => updateMatchScore(idx, setIdx, 1)}
-                        disabled={isMatchOver || match.sets[setIdx] !== 0}
-                        className="bg-indigo-500 text-white px-2 py-1 rounded text-xs"
-                      >
-                        Team 1 Win
-                      </button>
-                      <button
-                        onClick={() => updateMatchScore(idx, setIdx, 2)}
-                        disabled={isMatchOver || match.sets[setIdx] !== 0}
-                        className="bg-purple-500 text-white px-2 py-1 rounded text-xs"
-                      >
-                        Team 2 Win
-                      </button>
-                      <span className="ml-2">
-                        Winner: {match.sets[setIdx] ? `Team ${match.sets[setIdx]}` : '—'}
-                      </span>
+                      <button onClick={() => updateMatchScore(idx, setIdx, 1)} disabled={isMatchOver || match.sets[setIdx] !== 0} className="bg-indigo-500 text-white px-2 py-1 rounded text-xs">Team 1 Win</button>
+                      <button onClick={() => updateMatchScore(idx, setIdx, 2)} disabled={isMatchOver || match.sets[setIdx] !== 0} className="bg-purple-500 text-white px-2 py-1 rounded text-xs">Team 2 Win</button>
+                      <span className="ml-2">Winner: {match.sets[setIdx] ? `Team ${match.sets[setIdx]}` : '—'}</span>
                     </div>
                   ))}
                 </div>
@@ -262,6 +242,6 @@ function TennisBracket() {
       </div>
     </div>
   );
-}
+};
 
 export default TennisBracket;
